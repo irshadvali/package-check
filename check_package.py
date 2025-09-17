@@ -15,10 +15,16 @@ def check_package(package_name, package_json_path="package.json", lock_json_path
         elif package_name in package_data.get("devDependencies", {}):
             result["package.json"] = package_data["devDependencies"][package_name]
 
-        # Check in package-lock.json
-        if package_name in lock_data.get("dependencies", {}):
-            dep_info = lock_data["dependencies"][package_name]
-            result["package-lock.json"] = dep_info.get("version", "unknown")
+        # Check in package-lock.json (npm v7+ uses "packages")
+        lock_deps = lock_data.get("dependencies", {})
+        if package_name in lock_deps:
+            result["package-lock.json"] = lock_deps[package_name].get("version", "unknown")
+
+        # Also check "packages" section
+        lock_packages = lock_data.get("packages", {})
+        node_modules_key = f"node_modules/{package_name}"
+        if node_modules_key in lock_packages:
+            result["package-lock.json"] = lock_packages[node_modules_key].get("version", "unknown")
 
         return result if result else None
 
@@ -30,45 +36,8 @@ def check_package(package_name, package_json_path="package.json", lock_json_path
 
 if __name__ == "__main__":
     packages_to_check = [
-        "angulartics2",
-        "@ctrl/deluge",
-        "@ctrl/golang-template",
-        "@ctrl/magnet-link",
-        "@ctrl/ngx-codemirror",
-        "@ctrl/ngx-csv",
-        "@ctrl/ngx-emoji-mart",
-        "@ctrl/ngx-rightclick",
-        "@ctrl/qbittorrent",
-        "@ctrl/react-adsense",
-        "@ctrl/shared-torrent",
-        "@ctrl/tinycolor",
-        "@ctrl/torrent-file",
-        "@ctrl/transmission",
-        "@ctrl/ts-base32",
-        "encounter-playground",
-        "json-rules-engine-simplified",
-        "koa2-swagger-ui",
-        "@nativescript-community/gesturehandler",
-        "@nativescript-community/sentry",
-        "@nativescript-community/text",
-        "@nativescript-community/ui-collectionview",
-        "@nativescript-community/ui-drawer",
-        "@nativescript-community/ui-image",
-        "@nativescript-community/ui-material-bottomsheet",
-        "@nativescript-community/ui-material-core",
-        "@nativescript-community/ui-material-core-tabs",
-        "ngx-color",
-        "ngx-toastr",
-        "ngx-trend",
-        "react-complaint-image",
-        "react-jsonschema-form-conditionals",
-        "react-jsonschema-form-extras",
-        "rxnt-authentication",
-        "rxnt-healthchecks-nestjs",
-        "rxnt-kue",
-        "swc-plugin-component-annotate",
-        "ts-gaussian",
-        "axios",
+        "@babel/code-frame",  # will be found here
+        "axios"
     ]
 
     for pkg in packages_to_check:
